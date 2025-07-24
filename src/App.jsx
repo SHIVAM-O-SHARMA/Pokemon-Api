@@ -6,11 +6,43 @@ function App(){
   const [pokemon,setPokemon]= useState([]);
   const [category,setCategory]= useState("");
   const [loading,setLoading]= useState(false);
+  const [nameCondition,setNameCondition]= useState(false);
   const inputRef= useRef(null);
+  const inputRef1= useRef(null);
 
+  async function PokemonByName(){
+    setLoading(true);
+    setNameCondition(true);
+    
+    const fetched1=[];
+    const pokeName= inputRef1.current.value.toLowerCase();
+    
+    if (!pokeName) {
+      alert("Please enter a Pokémon name");
+      setLoading(false);
+      setNameCondition(false);
+      return;
+    }
+
+    try{
+    const data= await fetch(`https://pokeapi.co/api/v2/pokemon/${pokeName}`);
+    const convertedData= await data.json();
+    fetched1.push(convertedData);
+    setPokemon(fetched1);
+    }catch(error){
+      console.log(error);
+      setPokemon([]);
+      alert(error.message);
+    }
+    finally{
+      setNameCondition(false);
+      setLoading(false);
+    }
+  }
+  
   async function GetPokemon(){
-  const count= Number(inputRef.current.value);
   const fetched=[];
+  const count= Number(inputRef.current.value);
 
   try{
   setLoading(true);
@@ -53,14 +85,14 @@ function DeletePokemon(){
 }
 
   return (
-  <div>
-    <h1 className='text-[50px] text-center p-10'>Pokemon Cards</h1>
-    <div className='flex justify-center m-5 p-5 space-x-6 bg-gray-400'>
-    <input type="number" placeholder='number' className='rounded bg-amber-200' ref={inputRef} />
-  <select
+  <div className='min-h-screen bg-gradient-to-r from-purple-950 to-purple-600 pb-9'>
+    <h1 className='text-[55px] font-bold text-center p-7 text-gray-300'>Pokemon Cards</h1>
+    <div className='flex sm:flex-row space-y-2 sm:space-y-0 flex-col items-center justify-center p-7 m-5 space-x-6 bg-gray-300 rounded-2xl max-w-4xl mx-auto w-full'>
+    <input type="number" placeholder='  Number of cards' className='rounded bg-slate-700 text-gray-300 h-11 sm:w-15 w-full' ref={inputRef} />
+    <select
   value={category}
   onChange={(e)=> setCategory(e.target.value)}
-  className='rounded bg-amber-200'>
+  className='rounded bg-slate-700 text-gray-300 h-11 sm:w-35 w-full'>
   <option value="">Select Category</option>
   <option value="fire">Fire</option>
   <option value="water">Water</option>
@@ -80,20 +112,37 @@ function DeletePokemon(){
   <option value="dragon">Dragon</option>
   <option value="steel">Steel</option>
   <option value="flying">Flying</option>
-  </select>  
-      <button onClick={GetPokemon} className='bg-red-300 rounded w-25 h-8' disabled={loading}>{loading ? 'Loading..' : 'Show cards'}</button>
-      <button onClick={DeletePokemon} className='bg-red-300 rounded w-23 h-8'>Clear all</button>
-    </div>
+    </select>  
+    <input ref={inputRef1} type="text" placeholder='  Enter name' className='rounded bg-slate-700 text-gray-300 h-11 w-full sm:w-35' />
+    <button onClick={PokemonByName} className='bg-red-500 text-gray-200 hover:bg-gray-200 hover:text-red-500 hover:border-1 hover:cursor-pointer border-red-500 transition-all duration-200 rounded w-full h-11 sm:w-35'>Search By Name</button>
+    <button onClick={GetPokemon} className='bg-red-500 text-gray-200 hover:bg-gray-200 hover:text-red-500 hover:border-1 hover:cursor-pointer border-red-500 transition-all duration-200 rounded h-11 sm:w-25 w-full' disabled={loading}>{loading ? 'Loading..' : 'Show cards'}</button>
+    <button onClick={DeletePokemon} className='bg-red-500 text-gray-200 hover:bg-gray-200 hover:text-red-500 hover:border-1 hover:cursor-pointer border-red-500 transition-all duration-200 rounded h-11 sm:w-25 w-full'>Clear all</button>
+    </div> 
 
     {loading && 
-    <div className='fixed inset-0 bg-black/50 z-70 flex justify-center items-center p-7'>
-    <div className='w-14 h-14 rounded-full animate-spin border-4 border-blue-400 border-dashed'></div>
-    </div> }    
+    <div className='fixed inset-0 bg-black/70 z-70 flex justify-center items-center pt-6'>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Poké_Ball_icon.svg"
+         alt="loading pokemon" className='animate-spin w-20 h-20' />
+    </div> }
+    
+  {nameCondition ? (pokemon.length > 0 ? (
+    pokemon.map((p) => (
+      <div key={p.id || p.name} className='items-center'>
+        <div>
+          <h1>{p.name}</h1>
+          <img src={p.sprites.other['official-artwork'].front_default} className='w-70 h-68' />
+        </div>
+      </div>
+    ))
+  ) : (
+    <div>No such pokemon exists</div>
+  )
+) : null}
 
-    <div className='flex flex-wrap gap-4 justify-center'>
+    <div className='flex flex-wrap gap-6 justify-center pt-7'>
       {pokemon && pokemon.length>0 ? (
         pokemon.map((p) => (
-        <div key={p.id || p.name} className='bg-white rounded p-2 shadow'>
+        <div key={p.id || p.name} className='transform hover:scale-105 transition hover:cursor-pointer duration-150 bg-white rounded-2xl p-2 sm:w-[320px] w-[240px] shadow'>
         <h1 className='font-semibold font-sans text-[22px]'>{p.name}</h1>
         <h2 className='text-[17px]'>{p.name}</h2>
         <img src={p.sprites.other['official-artwork'].front_default} className='w-70 h-68' alt="pic" />
